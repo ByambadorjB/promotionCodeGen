@@ -1,0 +1,18 @@
+body {
+    background-color: #b1b1cf;
+  }
+
+p {
+    margin: 0;
+  }
+  .tname {
+    width: 100px;
+    display: inline-block;
+  }
+  .pass {
+    color: green;
+  }
+  .fail {
+    color: red;
+  }
+  

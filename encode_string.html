@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <script src="scripts.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    </head>
+
+    <body>
+
+    <h1>The Window Object</h1>
+    <h2>The btoa() Method</h2>
+
+    <p>The btoa() method encodes a string in base-64.</p>
+    <p>The btoa() method is not supported in IE9 and earlier.</p>
+
+    <p id="demo"></p>
+
+    <script>
+    let text = "Hello";
+    let encoded = window.btoa(text);
+
+    document.getElementById("demo").innerHTML = "Original: " + text + "<br>Encoded: " + encoded;
+    </script>
+
+    <div>Run the tests</div>
+
+    <button onclick="RunTests()">Run Tests</button>
+    <h3>Test results:</h3>
+    <div id="test-results"></div>
+
+    </body>
+</html>
