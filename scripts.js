@@ -1,51 +1,68 @@
-// TODO: Modify this function
-function generateShortCode(storeId, transactionId, customDate) {
-    // Logic goes here
-    // var d = new Date();
-    if(storeId < 0 || storeId > 200) 
-        throw new Error ("Invalid Store ID");
-    if(transactionId < 1 || transactionId > 10000)
-        throw new Error ("Invalid Store ID");
 
-
-    let d = customDate ? new Date(customDate) : new Date();
-    // alert(d);
-    let day=d.getDate();
-    let hexDay =day.toString(32);
-    let hexstoreId = storeId.toString(32);
-    let hextransactionId = transactionId.toString(32);
-
-    
-    let uniquecode=`${hexstoreId}s${hextransactionId}t${hexDay}`
-   
-return uniquecode;
+// Function to calculate a checksum
+function calculateChecksum(code) {
+    let sum = 0;
+    for (let i = 0; i < code.length; i++) {
+        sum += code.charCodeAt(i) * (i + 1); // Weight each character by position
+    }
+    return (sum % 36).toString(36); // Convert to base36 for compactness
 }
 
-// TODO: Modify this function
+// Function to generate the unique short code
+function generateShortCode(storeId, transactionId) {
+    if (storeId < 0 || storeId > 200) throw new Error("Invalid store ID");
+    if (transactionId < 1 || transactionId > 10000) throw new Error("Invalid transaction ID");
+
+    const date = new Date();
+    const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000); // Calculate day of the year
+
+    // Convert all parts to base36 for compact encoding
+    const storePart = storeId.toString(36).padStart(2, "0");
+    const transactionPart = transactionId.toString(36).padStart(3, "0");
+    const datePart = dayOfYear.toString(36).padStart(2, "0");
+
+    const rawCode = `${storePart}${datePart}${transactionPart}`;
+    // Add a simple checksum
+    const checksum = calculateChecksum(rawCode);
+
+    return `${rawCode}${checksum}`;
+
+}
+
+
+// Function to decode the unique short code
 function decodeShortCode(shortCode) {
-    // Logic goes here
+    if (shortCode.length > 9) {
+        throw new Error("Invalid code length");
+    }
 
-    storeid=shortCode.substring(0,shortCode.indexOf("s"));        
-    transaction=shortCode.substring(shortCode.indexOf("s")+1,shortCode.indexOf("t")); 
-    date=shortCode.substring(shortCode.indexOf("t")+1);
+    const rawCode = shortCode.slice(0, -1); // Exclude the checksum
+    console.log(`Rawcode: ${rawCode}`)
+    const checksum = shortCode.slice(-1); // Last character is the checksum
+    console.log(`checksum: ${checksum}`)
 
+    // Validate the checksum
+    if (calculateChecksum(rawCode) !== checksum) {
+        throw new Error("Invalid code: checksum mismatch");
+    }
 
-    storeid=parseInt(storeid,32);
-    transaction=parseInt(transaction,32);
-    day=parseInt(date,32);
+    const storePart = shortCode.slice(0, 2);
+    const datePart = shortCode.slice(2, 4);
+    const transactionPart = shortCode.slice(4, 7);
 
-    // Decode and simulate the shop date
-    let today = new Date();
-    today.setDate(day); // Set day, may cause overflow (e.g., 32/12) 
+    const storeId = parseInt(storePart, 36);
+    const dayOfYear = parseInt(datePart, 36);
+    const transactionId = parseInt(transactionPart, 36);
+
+    const year = new Date().getFullYear();
+    const shopDate = new Date(year, 0, dayOfYear); // Convert day of the year back to a date
 
     return {
-        storeId: storeid, // store id goes here,
-        shopDate: today,  // the date the customer shopped,
-        transactionId: transaction, // transaction id goes here
+        storeId,
+        shopDate,
+        transactionId,
     };
-
 }
-
 
 // ------------------------------------------------------------------------------//
 // --------------- Don't touch this area, all tests have to pass --------------- //
@@ -59,7 +76,12 @@ function RunTests() {
         transactionIds.forEach(function (transactionId) {
             var shortCode = generateShortCode(storeId, transactionId);
             var decodeResult = decodeShortCode(shortCode);
-            $("#test-results").append("<div>" + storeId + " - " + transactionId + ": " + shortCode + "</div>");
+            // Append result to test-results with the length of shortCode
+            $("#test-results").append(`
+                <div>
+                    ${storeId} - ${transactionId}: ${shortCode} : ${shortCode.length}
+                </div>
+            `);
             AddTestResult("Length <= 9", shortCode.length <= 9);
             AddTestResult("Is String", (typeof shortCode === 'string'));
             AddTestResult("Is Today", IsToday(decodeResult.shopDate));
